@@ -4,11 +4,14 @@ Run: python run_web.py
 """
 
 import os
+import sys
 import json
 from datetime import datetime
 from flask import Flask, render_template, request, jsonify
 from dotenv import load_dotenv
 from colorama import init
+
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 init()
 load_dotenv()
