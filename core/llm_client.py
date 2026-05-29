@@ -7,7 +7,9 @@ import os
 import json
 import requests
 from colorama import Fore, Style
-from core.prompt_engine import SYSTEM_PROMPT, build_analysis_prompt
+
+# FIXED IMPORT: Removed "core." prefix
+from prompt_engine import SYSTEM_PROMPT, build_analysis_prompt
 
 
 def analyze_news(news_text: str) -> dict:
@@ -18,7 +20,7 @@ def analyze_news(news_text: str) -> dict:
     api_key = os.environ.get("GROQ_API_KEY")
     if not api_key or api_key == "your_groq_api_key_here":
         raise EnvironmentError(
-            "GROQ_API_KEY not set in .env file. "
+            "GROQ_API_KEY not set in environment or .env file. "
             "Get your free key at https://console.groq.com"
         )
 
@@ -54,7 +56,7 @@ def analyze_news(news_text: str) -> dict:
         raise RuntimeError(f"Network error calling Groq: {e}")
 
     if response.status_code == 401:
-        raise EnvironmentError("Invalid Groq API key. Check your .env file.")
+        raise EnvironmentError("Invalid Groq API key. Check your deployment settings.")
     elif response.status_code == 429:
         raise RuntimeError("Groq rate limit hit. Wait a moment and try again.")
     elif response.status_code != 200:
@@ -64,16 +66,13 @@ def analyze_news(news_text: str) -> dict:
 
     print(f"{Fore.YELLOW}[LLM] Response received. Parsing JSON...{Style.RESET_ALL}")
 
-    # Strip markdown code fences if model adds them
     if raw_response.startswith("```"):
         lines = raw_response.split("\n")
         raw_response = "\n".join(lines[1:-1])
 
     try:
         parsed = json.loads(raw_response)
-    except json.JSONDecodeError as e:
-        print(f"{Fore.RED}[LLM] Raw response that failed to parse:{Style.RESET_ALL}")
-        print(raw_response[:500])
-        raise ValueError(f"Failed to parse JSON from Groq: {e}")
-
-    return parsed
+        return parsed
+    except json.JSONDecodeError:
+        print(f"{Fore.RED}[ERROR] Raw LLM response was not valid JSON:{Style.RESET_ALL}\n{raw_response}")
+        raise RuntimeError("LLM returned non-JSON structure. Try running analysis again.")
