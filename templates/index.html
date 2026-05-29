@@ -449,13 +449,14 @@
   .score-bar-fill {
     height: 100%;
     border-radius: 2px;
-    transition: width 0.6s ease;
+    transition: width 0.6s ease, left 0.6s ease;
     position: absolute;
     top: 0;
   }
 
-  .score-bar-fill.Bullish { background: var(--bull); right: 50%; }
-  .score-bar-fill.Bearish { background: var(--bear); left: 50%; }
+  /* Fixed Score-Bar Anchor Positions */
+  .score-bar-fill.Bullish { background: var(--bull); left: 50%; }
+  .score-bar-fill.Bearish { background: var(--bear); left: calc(50% - var(--bar-width-offset, 0px)); }
   .score-bar-fill.Neutral { background: var(--neutral); left: 50%; }
 
   .score-center-line {
@@ -465,6 +466,7 @@
     width: 1px;
     height: 8px;
     background: var(--border);
+    z-index: 2;
   }
 
   .score-label {
@@ -571,31 +573,28 @@
 
 <div class="container">
 
-  <!-- INPUT SECTION -->
   <div class="tabs">
     <button class="tab-btn active" onclick="switchTab('urls')">Paste URLs</button>
     <button class="tab-btn" onclick="switchTab('text')">Paste Article Text</button>
   </div>
 
-  <!-- URL panel -->
   <div class="input-panel active" id="panel-urls">
     <span class="label">News Article URLs — paste one per row</span>
     <div class="url-list" id="url-list">
       <div class="url-row">
         <input type="url" placeholder="https://www.reuters.com/markets/article-name..." />
-        <button class="remove-btn" onclick="removeUrl(this)" title="Remove">×</button>
+        <button type="button" class="remove-btn" onclick="removeUrl(this)" title="Remove">×</button>
       </div>
     </div>
-    <button class="add-url-btn" onclick="addUrlRow()">+ Add another URL</button>
+    <button type="button" class="add-url-btn" onclick="addUrlRow()">+ Add another URL</button>
   </div>
 
-  <!-- Text panel -->
   <div class="input-panel" id="panel-text">
     <span class="label">Paste article text — separate multiple articles with a blank line</span>
     <textarea placeholder="Tesla shares surged 8% today after the company reported record deliveries...&#10;&#10;The Federal Reserve held interest rates steady at 5.25%..."></textarea>
   </div>
 
-  <button class="analyze-btn" id="analyze-btn" onclick="runAnalysis()">
+  <button type="button" class="analyze-btn" id="analyze-btn" onclick="runAnalysis()">
     <span class="spinner" id="spinner"></span>
     <span id="btn-label">ANALYZE</span>
   </button>
@@ -603,7 +602,6 @@
 
   <hr class="divider">
 
-  <!-- RESULTS SECTION -->
   <div id="results">
     <div id="error-display"></div>
     <div id="warn-display"></div>
@@ -639,7 +637,7 @@
     row.className = 'url-row';
     row.innerHTML = `
       <input type="url" placeholder="https://..." />
-      <button class="remove-btn" onclick="removeUrl(this)" title="Remove">×</button>
+      <button type="button" class="remove-btn" onclick="removeUrl(this)" title="Remove">×</button>
     `;
     list.appendChild(row);
     row.querySelector('input').focus();
@@ -699,8 +697,12 @@
       const data = await res.json();
 
       if (!res.ok || data.error) {
+        let errMsg = data.error || 'Unknown error';
+        if (data.details && Array.from(data.details).length > 0) {
+           errMsg += `<br><small style="opacity:0.8">${data.details.join('<br>')}</small>`;
+        }
         document.getElementById('error-display').innerHTML =
-          `<div class="error-card">⚠ ${data.error || 'Unknown error'}</div>`;
+          `<div class="error-card">⚠ ${errMsg}</div>`;
         document.getElementById('results').style.display = 'block';
         setStatus('Analysis failed.', 'error');
         return;
@@ -772,7 +774,7 @@
     articles.forEach((a, i) => {
       const s = a.sentiment || 'Neutral';
       const score = a.sentiment_score || 0;
-      const barWidth = Math.abs(score) * 50; // 0–50% from center
+      const barWidth = Math.abs(score) * 50; // Max span distance is 50% from center axis
 
       const entities = (a.entities || []).map(e => `<span class="tag">${e}</span>`).join('');
       const riskFlags = (a.risk_flags || []).map(r => `<span class="risk-tag">⚑ ${r}</span>`).join('');
@@ -781,6 +783,10 @@
       const card = document.createElement('div');
       card.className = `article-card ${s}`;
       card.style.animationDelay = `${i * 0.06}s`;
+      
+      // Inline style workaround injecting exact offsets to compute Bearish metrics accurately 
+      const styleAttribute = s === 'Bearish' ? `width:${barWidth}%; --bar-width-offset:${barWidth}%` : `width:${barWidth}%`;
+
       card.innerHTML = `
         <div class="card-top">
           <div style="flex:1">
@@ -792,7 +798,7 @@
         <div class="score-bar-wrap">
           <div class="score-bar-track">
             <div class="score-center-line"></div>
-            <div class="score-bar-fill ${s}" style="width:${barWidth}%"></div>
+            <div class="score-bar-fill ${s}" style="${styleAttribute}"></div>
           </div>
           <div class="score-label"><span>−1.0 Bearish</span><span>${score >= 0 ? '+' : ''}${score.toFixed(2)}</span><span>Bullish +1.0</span></div>
         </div>
