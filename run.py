@@ -1,13 +1,9 @@
 """
 FinSentimentEngine — Entry Point
-Run this file to analyze financial news.
-
 Usage:
     python run.py                    <- uses inputs/sample_news.txt
     python run.py --url <URL>        <- fetches from a URL
     python run.py --text "..."       <- pass inline text
-
-D:\FinSentimentEngine> python run.py
 """
 
 import sys
@@ -15,15 +11,13 @@ import os
 from dotenv import load_dotenv
 from colorama import init, Fore, Style
 
-# Init colorama for Windows color support
 init()
-
-# Load API key from .env
 load_dotenv()
 
-from core.fetcher import fetch_from_file, fetch_from_url, fetch_from_string
-from core.llm_client import analyze_news
-from core.output_handler import save_output, print_summary
+# FIXED IMPORTS: Removed "core." prefix
+from fetcher import fetch_from_file, fetch_from_url, fetch_from_string
+from llm_client import analyze_news
+from output_handler import save_output, print_summary
 
 
 def main():
@@ -33,7 +27,6 @@ def main():
     
     args = sys.argv[1:]
     
-    # --- Input mode selection ---
     try:
         if len(args) >= 2 and args[0] == "--url":
             raw_text = fetch_from_url(args[1])
@@ -42,7 +35,6 @@ def main():
             raw_text = fetch_from_string(args[1])
         
         else:
-            # Default: read from inputs/sample_news.txt
             default_path = os.path.join("inputs", "sample_news.txt")
             raw_text = fetch_from_file(default_path)
     
@@ -50,18 +42,13 @@ def main():
         print(f"{Fore.RED}[ERROR] Input error: {e}{Style.RESET_ALL}")
         sys.exit(1)
     
-    # --- LLM Analysis ---
     try:
         results = analyze_news(raw_text)
-    except (EnvironmentError, RuntimeError, ValueError) as e:
-        print(f"{Fore.RED}[ERROR] Analysis failed: {e}{Style.RESET_ALL}")
+        save_output(results)
+        print_summary(results)
+    except Exception as e:
+        print(f"{Fore.RED}[ERROR] Execution failed: {e}{Style.RESET_ALL}")
         sys.exit(1)
-    
-    # --- Output ---
-    print_summary(results)
-    saved_path = save_output(results)
-    
-    print(f"{Fore.GREEN}Done! Full JSON saved to: {saved_path}{Style.RESET_ALL}\n")
 
 
 if __name__ == "__main__":
