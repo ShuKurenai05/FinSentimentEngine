@@ -28,7 +28,14 @@ def index():
 
 @app.route("/analyze", methods=["POST"])
 def analyze():
-    data = request.get_json()
+    # silent=True prevents Flask from automatically throwing a 400 error if headers/JSON are malformed
+    data = request.get_json(silent=True)
+    
+    if data is None:
+        print("\n[BACKEND ALERT] Received a POST request to /analyze, but the payload is empty or "
+              "missing the 'Content-Type: application/json' header.")
+        return jsonify({"error": "Invalid payload. Make sure data is valid JSON and Content-Type header is set."}), 400
+
     input_type = data.get("type")        # "urls" or "text"
     content = data.get("content", "")    # list of URLs or raw text string
 
@@ -37,6 +44,10 @@ def analyze():
 
     try:
         if input_type == "urls":
+            # Ensure content is a list before processing
+            if not isinstance(content, list):
+                return jsonify({"error": "For 'urls' input type, 'content' must be an array of links."}), 400
+                
             urls = [u.strip() for u in content if u.strip()]
             if not urls:
                 return jsonify({"error": "No URLs provided."}), 400
@@ -52,12 +63,12 @@ def analyze():
                 return jsonify({"error": "All URLs failed to load.", "details": errors}), 400
 
         elif input_type == "text":
-            if not content or not content.strip():
+            if not isinstance(content, str) or not content.strip():
                 return jsonify({"error": "No text provided."}), 400
             collected_articles = [content.strip()]
 
         else:
-            return jsonify({"error": "Invalid input type."}), 400
+            return jsonify({"error": "Invalid input type. Must be 'urls' or 'text'."}), 400
 
         combined = "\n\n---\n\n".join(collected_articles)
         results = analyze_news(combined)
