@@ -1,7 +1,6 @@
 """
 FinSentimentEngine — Web Server
 Run: python run_web.py
-Then open: http://localhost:5000
 """
 
 import os
@@ -14,6 +13,7 @@ from colorama import init
 init()
 load_dotenv()
 
+# FIXED IMPORTS: Removed "core." prefix
 from fetcher import fetch_from_url, fetch_from_string
 from llm_client import analyze_news
 from output_handler import save_output
@@ -28,12 +28,11 @@ def index():
 
 @app.route("/analyze", methods=["POST"])
 def analyze():
-    # silent=True prevents Flask from automatically throwing a 400 error if headers/JSON are malformed
+    # silent=True prevents crashing if headers/JSON are malformed
     data = request.get_json(silent=True)
     
     if data is None:
-        print("\n[BACKEND ALERT] Received a POST request to /analyze, but the payload is empty or "
-              "missing the 'Content-Type: application/json' header.")
+        print("\n[BACKEND ALERT] Received empty payload or missing Content-Type header.")
         return jsonify({"error": "Invalid payload. Make sure data is valid JSON and Content-Type header is set."}), 400
 
     input_type = data.get("type")        # "urls" or "text"
@@ -44,7 +43,6 @@ def analyze():
 
     try:
         if input_type == "urls":
-            # Ensure content is a list before processing
             if not isinstance(content, list):
                 return jsonify({"error": "For 'urls' input type, 'content' must be an array of links."}), 400
                 
@@ -73,7 +71,6 @@ def analyze():
         combined = "\n\n---\n\n".join(collected_articles)
         results = analyze_news(combined)
 
-        # Add fetch errors to metadata if any
         if errors:
             results["fetch_warnings"] = errors
 
@@ -88,6 +85,5 @@ def analyze():
 
 if __name__ == "__main__":
     print("\n  FinSentimentEngine is running.")
-    print("  Open your browser and go to: http://localhost:5000\n")
     port = int(os.environ.get("PORT", 5000))
     app.run(debug=False, host="0.0.0.0", port=port)
