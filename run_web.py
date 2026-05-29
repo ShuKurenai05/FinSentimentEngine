@@ -14,9 +14,9 @@ from colorama import init
 init()
 load_dotenv()
 
-from core.fetcher import fetch_from_url, fetch_from_string
-from core.llm_client import analyze_news
-from core.output_handler import save_output
+from fetcher import fetch_from_url, fetch_from_string
+from llm_client import analyze_news
+from output_handler import save_output
 
 app = Flask(__name__)
 
