@@ -3,3 +3,4 @@ requests==2.31.0
 colorama==0.4.6
 flask==2.3.3
 beautifulsoup4==4.12.2
+gunicorn==21.2.0
