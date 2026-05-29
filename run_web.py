@@ -5,21 +5,38 @@ Run: python run_web.py
 
 import os
 import sys
+import types
 import json
 from datetime import datetime
 from flask import Flask, render_template, request, jsonify
 from dotenv import load_dotenv
 from colorama import init
 
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+# =====================================================================
+# SELF-HEALING PATCH: FORCES BOTH FLAT AND 'CORE' IMPORTS TO WORK
+# =====================================================================
+root_path = os.path.dirname(os.path.abspath(__file__))
+if root_path not in sys.path:
+    sys.path.insert(0, root_path)
+
+# Creates a virtual 'core' namespace pointing directly to your root files
+core_mock = types.ModuleType('core')
+core_mock.__path__ = [root_path]
+sys.modules['core'] = core_mock
+# =====================================================================
 
 init()
 load_dotenv()
 
-# FIXED IMPORTS: Removed "core." prefix
-from fetcher import fetch_from_url, fetch_from_string
-from llm_client import analyze_news
-from output_handler import save_output
+# This handles whichever import style your files are currently using
+try:
+    from core.fetcher import fetch_from_url, fetch_from_string
+    from core.llm_client import analyze_news
+    from core.output_handler import save_output
+except ImportError:
+    from fetcher import fetch_from_url, fetch_from_string
+    from llm_client import analyze_news
+    from output_handler import save_output
 
 app = Flask(__name__)
 
@@ -31,15 +48,13 @@ def index():
 
 @app.route("/analyze", methods=["POST"])
 def analyze():
-    # silent=True prevents crashing if headers/JSON are malformed
     data = request.get_json(silent=True)
     
     if data is None:
-        print("\n[BACKEND ALERT] Received empty payload or missing Content-Type header.")
-        return jsonify({"error": "Invalid payload. Make sure data is valid JSON and Content-Type header is set."}), 400
+        return jsonify({"error": "Invalid or empty payload."}), 400
 
-    input_type = data.get("type")        # "urls" or "text"
-    content = data.get("content", "")    # list of URLs or raw text string
+    input_type = data.get("type")        
+    content = data.get("content", "")    
 
     collected_articles = []
     errors = []
@@ -47,7 +62,7 @@ def analyze():
     try:
         if input_type == "urls":
             if not isinstance(content, list):
-                return jsonify({"error": "For 'urls' input type, 'content' must be an array of links."}), 400
+                return jsonify({"error": "Content must be an array of links."}), 400
                 
             urls = [u.strip() for u in content if u.strip()]
             if not urls:
