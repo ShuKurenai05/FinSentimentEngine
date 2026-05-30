@@ -27,7 +27,8 @@ BLOCKED_DOMAINS = [
 JS_HEAVY_DOMAINS = [
     "moneycontrol.com", "economictimes.indiatimes.com",
     "livemint.com", "ndtvprofit.com", "businesstoday.in",
-    "financialexpress.com", "thehindu.com", "hindustantimes.com"
+    "financialexpress.com", "thehindu.com", "hindustantimes.com",
+    "cnbctv18.com"
 ]
 
 USER_AGENTS = [
