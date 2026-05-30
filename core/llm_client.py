@@ -103,9 +103,21 @@ def analyze_news(news_text: str) -> dict:
             lines = raw_response.split("\n")
             raw_response = "\n".join(lines[1:-1]).strip()
 
+        # Check if response looks like JSON
         if not raw_response.startswith("{"):
             print(f"{Fore.RED}[LLM] Response doesn't look like JSON: "
-                  f"{raw_response[:200]}{Style.RESET_ALL}")
+                  f"{raw_response[:100]}{Style.RESET_ALL}")
+            
+            if attempt < MAX_RETRIES:
+                # Retry with shorter, simpler text
+                shorter_text = news_text[:MAX_INPUT_CHARS // 2]
+                prompt = build_analysis_prompt(shorter_text)
+                payload["messages"][1]["content"] = prompt
+                print(f"{Fore.YELLOW}[LLM] Retrying with shorter input "
+                      f"({len(shorter_text)} chars)...{Style.RESET_ALL}")
+                time.sleep(3)
+                continue
+            
             raise ValueError(
                 "Groq returned plain text instead of JSON. "
                 "Try with a shorter article or use the 'Paste Text' tab."
