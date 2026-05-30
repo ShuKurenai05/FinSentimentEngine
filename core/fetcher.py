@@ -57,8 +57,11 @@ def _get_headers() -> dict:
     }
 
 
-def _extract_text_from_soup(soup) -> str:
-    """Extract clean paragraph text from a BeautifulSoup object."""
+def _extract_text_from_soup(soup, max_paragraphs: int = 20) -> str:
+    """
+    Extract clean paragraph text from a BeautifulSoup object.
+    Limits to first max_paragraphs to avoid massive live blog pages.
+    """
     for tag in soup(["script", "style", "nav", "footer",
                       "header", "aside", "form", "noscript",
                       "iframe", "figure", "figcaption"]):
@@ -89,6 +92,8 @@ def _extract_text_from_soup(soup) -> str:
 
     if target:
         paragraphs = target.find_all("p")
+        # Only take first max_paragraphs — prevents live blogs from exploding
+        paragraphs = paragraphs[:max_paragraphs]
         text = " ".join(
             p.get_text(separator=" ", strip=True)
             for p in paragraphs
@@ -98,7 +103,6 @@ def _extract_text_from_soup(soup) -> str:
         text = soup.get_text(separator=" ", strip=True)
 
     return re.sub(r'\s+', ' ', text).strip()
-
 
 def _try_archive(url: str) -> str:
     """
