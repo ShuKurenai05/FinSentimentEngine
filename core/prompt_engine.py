@@ -1,9 +1,8 @@
 """
 Prompt templates for the Financial Sentiment Engine.
-All prompts are designed for structured JSON output.
 """
 
-SYSTEM_PROMPT = """You are an expert financial analyst and NLP engine. 
+SYSTEM_PROMPT = """You are an expert financial analyst and NLP engine.
 Your job is to analyze financial news text and extract structured intelligence.
 You always respond with valid JSON only — no markdown, no explanation, no extra text.
 Never wrap your response in code blocks. Output raw JSON only."""
@@ -29,18 +28,18 @@ Return this exact JSON structure:
 {{
   "analysis_metadata": {{
     "total_articles": <int>,
-    "processing_timestamp": "<ISO 8601 timestamp>",
+    "processing_timestamp": "",
     "model_used": "llama-3.3-70b-versatile"
   }},
   "articles": [
     {{
       "article_id": 1,
       "headline_summary": "<string>",
-      "entities": ["<string>", "..."],
+      "entities": ["<string>"],
       "sentiment": "<Bullish|Bearish|Neutral>",
       "sentiment_score": <float>,
       "confidence": <float>,
-      "key_drivers": ["<string>", "..."],
+      "key_drivers": ["<string>"],
       "sector": "<string>",
       "risk_flags": ["<string>"]
     }}
