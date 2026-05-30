@@ -166,7 +166,7 @@ def _try_archive(url: str) -> str:
                 text = _clean_text(text)
                 if len(text) > 200:
                     print(f"{Fore.CYAN}[FETCHER] archive.ph succeeded ({len(text)} chars){Style.RESET_ALL}")
-                    return text[:3000]
+                    return text[:2000]
         print(f"{Fore.YELLOW}[FETCHER] archive.ph returned too little text{Style.RESET_ALL}")
     except Exception as e:
         print(f"{Fore.YELLOW}[FETCHER] archive.ph failed: {e}{Style.RESET_ALL}")
@@ -259,7 +259,7 @@ def fetch_from_url(url: str) -> str:
             f"After cleaning, not enough readable text could be extracted from {url}. "
             f"Try copying the article text manually and using the 'Paste Text' tab."
         )
-    return text[:3000]
+    return text[:2000]
 
 
 def fetch_from_string(text: str) -> str:
