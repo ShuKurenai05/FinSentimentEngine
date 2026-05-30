@@ -36,6 +36,40 @@ USER_AGENTS = [
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/121.0"
 ]
 
+def _clean_text(text: str) -> str:
+    """
+    Clean scraped text before sending to AI.
+    Removes unicode garbage, cookie/ad/subscription text,
+    and other noise common in Indian news sites.
+    """
+    # Remove non-ASCII and non-printable characters (Hindi, Marathi, symbols etc.)
+    text = text.encode("ascii", errors="ignore").decode("ascii")
+
+    # Remove common noise phrases from Indian news sites
+    noise_phrases = [
+        "subscribe now", "subscription", "sign in", "log in", "register free",
+        "cookie", "accept all", "privacy policy", "terms of use",
+        "advertisement", "also read", "read more", "click here",
+        "follow us on", "download app", "get app", "breaking news",
+        "live updates", "follow live", "refresh page",
+        "javascript", "enable javascript", "please enable",
+    ]
+    lines = text.split(".")
+    cleaned_lines = []
+    for line in lines:
+        line_lower = line.lower().strip()
+        if len(line_lower) < 20:
+            continue
+        if any(noise in line_lower for noise in noise_phrases):
+            continue
+        cleaned_lines.append(line.strip())
+
+    text = ". ".join(cleaned_lines)
+
+    # Collapse whitespace
+    text = re.sub(r'\s+', ' ', text).strip()
+
+    return text
 
 def _get_domain(url: str) -> str:
     try:
@@ -120,7 +154,10 @@ def _try_archive(url: str) -> str:
             text = _extract_text_from_soup(soup)
             if len(text) > 200:
                 print(f"{Fore.CYAN}[FETCHER] archive.ph succeeded ({len(text)} chars){Style.RESET_ALL}")
-                return text[:3000]
+                text = _clean_text(text)
+                if len(text) > 200:
+                    print(f"{Fore.CYAN}[FETCHER] archive.ph succeeded ({len(text)} chars){Style.RESET_ALL}")
+                    return text[:3000]
         print(f"{Fore.YELLOW}[FETCHER] archive.ph returned too little text{Style.RESET_ALL}")
     except Exception as e:
         print(f"{Fore.YELLOW}[FETCHER] archive.ph failed: {e}{Style.RESET_ALL}")
@@ -207,6 +244,12 @@ def fetch_from_url(url: str) -> str:
         )
 
     print(f"{Fore.CYAN}[FETCHER] Scraped: {url} ({len(text)} chars){Style.RESET_ALL}")
+    text = _clean_text(text)
+    if len(text) < 100:
+        raise ConnectionError(
+            f"After cleaning, not enough readable text could be extracted from {url}. "
+            f"Try copying the article text manually and using the 'Paste Text' tab."
+        )
     return text[:3000]
 
 
