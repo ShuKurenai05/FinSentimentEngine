@@ -261,7 +261,6 @@ def fetch_from_url(url: str) -> str:
         )
     return text[:2000]
 
-
 def fetch_from_string(text: str) -> str:
     if not text or not text.strip():
         raise ValueError("Input text is empty.")
@@ -273,3 +272,69 @@ def split_into_articles(raw_text: str) -> list:
     articles = [a.strip() for a in raw_text.split("\n\n") if a.strip()]
     print(f"{Fore.CYAN}[FETCHER] Detected {len(articles)} article(s){Style.RESET_ALL}")
     return articles
+
+def fetch_from_newsapi(query: str, api_key: str, num_articles: int = 5) -> list:
+    """
+    Fetch latest news articles matching a search query via NewsAPI.
+    Returns a list of cleaned article text strings.
+    """
+    print(f"{Fore.CYAN}[FETCHER] Searching NewsAPI for: '{query}'{Style.RESET_ALL}")
+
+    url = "https://newsapi.org/v2/everything"
+    params = {
+        "q": query,
+        "language": "en",
+        "sortBy": "publishedAt",
+        "pageSize": num_articles,
+        "apiKey": api_key
+    }
+
+    try:
+        response = requests.get(url, params=params, timeout=10)
+        response.raise_for_status()
+    except requests.Timeout:
+        raise ConnectionError("NewsAPI timed out. Try again.")
+    except requests.HTTPError as e:
+        status = e.response.status_code if e.response else "unknown"
+        if status == 401:
+            raise EnvironmentError("Invalid NewsAPI key. Check your environment variables.")
+        elif status == 426:
+            raise EnvironmentError(
+                "NewsAPI free tier only works on localhost. "
+                "On a live server you need a paid plan. "
+                "Use the Paste Text tab instead."
+            )
+        else:
+            raise ConnectionError(f"NewsAPI error {status}.")
+    except requests.RequestException as e:
+        raise ConnectionError(f"Network error calling NewsAPI: {e}")
+
+    data = response.json()
+
+    if data.get("status") != "ok":
+        raise ConnectionError(f"NewsAPI returned error: {data.get('message', 'Unknown error')}")
+
+    articles = data.get("articles", [])
+    if not articles:
+        raise ValueError(f"No articles found for '{query}'. Try a different search term.")
+
+    results = []
+    for a in articles:
+        source = a.get("source", {}).get("name", "Unknown")
+        title = a.get("title", "")
+        description = a.get("description") or ""
+        content = a.get("content") or ""
+
+        # NewsAPI free tier truncates content at 200 chars
+        # Combine title + description + content for maximum text
+        combined = f"SOURCE: {source}\nTITLE: {title}\n\n{description}\n\n{content}"
+        combined = _clean_text(combined)
+
+        if len(combined) > 50:
+            results.append(combined)
+
+    if not results:
+        raise ValueError(f"Articles found but no readable content extracted for '{query}'.")
+
+    print(f"{Fore.CYAN}[FETCHER] NewsAPI returned {len(results)} articles for '{query}'{Style.RESET_ALL}")
+    return results
