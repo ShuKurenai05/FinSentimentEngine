@@ -5,18 +5,21 @@ Then open:   http://localhost:5000
 """
 
 import os
+from datetime import datetime, timezone
 from flask import Flask, render_template, request, jsonify
+from flask_cors import CORS
 from dotenv import load_dotenv
 from colorama import init
 
 init()
 load_dotenv()
 
-from core.fetcher import fetch_from_url, fetch_from_string
+from core.fetcher import fetch_from_url, fetch_from_string, fetch_from_newsapi
 from core.llm_client import analyze_news
 from core.output_handler import save_output
 
 app = Flask(__name__)
+CORS(app)
 
 
 @app.route("/")
@@ -47,12 +50,33 @@ def analyze():
                     errors.append(str(e))
 
             if not collected_articles:
-                return jsonify({"error": "All URLs failed to load.", "details": errors}), 400
+                return jsonify({
+                    "error": "Could not fetch any of the provided URLs.",
+                    "details": errors,
+                    "suggestion": "Try copying the article text and using the Paste Text tab instead."
+                }), 400
 
         elif input_type == "text":
             if not content or not content.strip():
                 return jsonify({"error": "No text provided."}), 400
             collected_articles = [content.strip()]
+
+        elif input_type == "search":
+            query = content.strip()
+            if not query:
+                return jsonify({"error": "No search query provided."}), 400
+
+            api_key = os.environ.get("NEWSAPI_KEY")
+            if not api_key:
+                return jsonify({"error": "NewsAPI key not configured on server."}), 500
+
+            try:
+                articles = fetch_from_newsapi(query, api_key, num_articles=5)
+                collected_articles = articles
+            except EnvironmentError as e:
+                return jsonify({"error": str(e)}), 500
+            except (ConnectionError, ValueError) as e:
+                return jsonify({"error": str(e)}), 400
 
         else:
             return jsonify({"error": "Invalid input type."}), 400
@@ -60,8 +84,7 @@ def analyze():
         combined = "\n\n---\n\n".join(collected_articles)
         results = analyze_news(combined)
 
-        # Inject real server timestamp instead of AI-hallucinated one
-        from datetime import datetime, timezone
+        # Inject real server timestamp
         results.setdefault("analysis_metadata", {})
         results["analysis_metadata"]["processing_timestamp"] = (
             datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
