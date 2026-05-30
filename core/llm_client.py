@@ -11,7 +11,7 @@ import requests
 from colorama import Fore, Style
 from core.prompt_engine import SYSTEM_PROMPT, build_analysis_prompt
 
-MAX_INPUT_CHARS = 12000
+MAX_INPUT_CHARS = 6000
 MAX_RETRIES = 3
 RETRY_DELAY = 15  # seconds to wait after rate limit hit
 
