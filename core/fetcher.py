@@ -168,3 +168,47 @@ def split_into_articles(raw_text: str) -> list:
     articles = [a.strip() for a in raw_text.split("\n\n") if a.strip()]
     print(f"{Fore.CYAN}[FETCHER] Detected {len(articles)} article(s){Style.RESET_ALL}")
     return articles
+
+def _try_archive(url: str) -> str:
+    """
+    For JS-heavy sites, try fetching via archive.ph which stores
+    fully rendered static snapshots. Free and no JS needed.
+    """
+    archive_url = f"https://archive.ph/newest/{url}"
+    print(f"{Fore.YELLOW}[FETCHER] Trying archive.ph for JS-heavy site...{Style.RESET_ALL}")
+
+    user_agents = [
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/121.0"
+    ]
+
+    headers = {
+        "User-Agent": random.choice(user_agents),
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Connection": "keep-alive"
+    }
+
+    try:
+        response = requests.get(archive_url, headers=headers, timeout=20)
+        if response.status_code == 200 and BS4_AVAILABLE:
+            soup = BeautifulSoup(response.text, "html.parser")
+            for tag in soup(["script", "style", "nav", "footer",
+                              "header", "aside", "form", "noscript"]):
+                tag.decompose()
+
+            paragraphs = soup.find_all("p")
+            text = " ".join(
+                p.get_text(separator=" ", strip=True)
+                for p in paragraphs
+                if len(p.get_text(strip=True)) > 30
+            )
+            text = re.sub(r'\s+', ' ', text).strip()
+
+            if len(text) > 200:
+                print(f"{Fore.CYAN}[FETCHER] archive.ph succeeded ({len(text)} chars){Style.RESET_ALL}")
+                return text[:6000]
+    except Exception as e:
+        print(f"{Fore.YELLOW}[FETCHER] archive.ph failed: {e}{Style.RESET_ALL}")
+
+    return ""
