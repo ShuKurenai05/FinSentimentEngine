@@ -1,17 +1,19 @@
 """
 LLM Client — Groq API (free tier)
-Uses LLaMA 3.3 70B via Groq's OpenAI-compatible endpoint.
+Uses LLaMA 3.1 8B via Groq's OpenAI-compatible endpoint.
+Includes retry logic for rate limit handling.
 """
 
 import os
 import json
+import time
 import requests
 from colorama import Fore, Style
 from core.prompt_engine import SYSTEM_PROMPT, build_analysis_prompt
 
-# Maximum characters we'll send to Groq in one request
-# Groq's context window is ~32k tokens — 12000 chars is safe
 MAX_INPUT_CHARS = 12000
+MAX_RETRIES = 3
+RETRY_DELAY = 15  # seconds to wait after rate limit hit
 
 
 def analyze_news(news_text: str) -> dict:
@@ -21,15 +23,12 @@ def analyze_news(news_text: str) -> dict:
             "GROQ_API_KEY not set. Get your free key at https://console.groq.com"
         )
 
-    # Hard cap — truncate if combined articles are too long
     if len(news_text) > MAX_INPUT_CHARS:
         print(f"{Fore.YELLOW}[LLM] Input too long ({len(news_text)} chars), "
               f"truncating to {MAX_INPUT_CHARS}...{Style.RESET_ALL}")
         news_text = news_text[:MAX_INPUT_CHARS]
 
     prompt = build_analysis_prompt(news_text)
-
-    print(f"{Fore.YELLOW}[LLM] Sending request to Groq API (LLaMA 3.3 70B)...{Style.RESET_ALL}")
 
     headers = {
         "Authorization": f"Bearer {api_key}",
@@ -44,69 +43,80 @@ def analyze_news(news_text: str) -> dict:
         ],
         "max_tokens": 4096,
         "temperature": 0.2,
-        "response_format": {"type": "json_object"}   # ← ADD THIS LINE
+        "response_format": {"type": "json_object"}
     }
 
-    try:
-        response = requests.post(
-            "https://api.groq.com/openai/v1/chat/completions",
-            headers=headers,
-            json=payload,
-            timeout=60
-        )
-    except requests.Timeout:
-        raise RuntimeError("Groq API timed out. Check your internet connection.")
-    except requests.RequestException as e:
-        raise RuntimeError(f"Network error calling Groq: {e}")
+    # Retry loop
+    for attempt in range(1, MAX_RETRIES + 1):
+        print(f"{Fore.YELLOW}[LLM] Sending request to Groq "
+              f"(attempt {attempt}/{MAX_RETRIES})...{Style.RESET_ALL}")
 
-    if response.status_code == 401:
-        raise EnvironmentError("Invalid Groq API key. Check your environment variables.")
-    elif response.status_code == 429:
-        raise RuntimeError("Groq rate limit hit. Wait a moment and try again.")
-    elif response.status_code == 413:
-        raise RuntimeError("Input too large for Groq. Try fewer or shorter articles.")
-    elif response.status_code != 200:
-        raise RuntimeError(f"Groq API error {response.status_code}: {response.text[:200]}")
+        try:
+            response = requests.post(
+                "https://api.groq.com/openai/v1/chat/completions",
+                headers=headers,
+                json=payload,
+                timeout=60
+            )
+        except requests.Timeout:
+            if attempt < MAX_RETRIES:
+                print(f"{Fore.YELLOW}[LLM] Timeout, retrying in {RETRY_DELAY}s...{Style.RESET_ALL}")
+                time.sleep(RETRY_DELAY)
+                continue
+            raise RuntimeError("Groq API timed out after multiple attempts.")
+        except requests.RequestException as e:
+            raise RuntimeError(f"Network error calling Groq: {e}")
 
-    try:
-        response_json = response.json()
-        raw_response = response_json["choices"][0]["message"]["content"].strip()
-    except (KeyError, IndexError, ValueError) as e:
-        raise ValueError(f"Unexpected response structure from Groq: {e}")
+        if response.status_code == 429:
+            # Read retry-after header if available
+            retry_after = int(response.headers.get("retry-after", RETRY_DELAY))
+            if attempt < MAX_RETRIES:
+                print(f"{Fore.YELLOW}[LLM] Rate limit hit. "
+                      f"Waiting {retry_after}s before retry...{Style.RESET_ALL}")
+                time.sleep(retry_after)
+                continue
+            raise RuntimeError(
+                "Groq rate limit hit. You're sending too many requests too quickly. "
+                "Wait 30 seconds and try again."
+            )
 
-    # Check for empty or garbage response
-    if not raw_response or len(raw_response) < 10:
-        raise ValueError(
-            "Groq returned an empty response. "
-            "The input may have been too long or contained unreadable content."
-        )
+        if response.status_code == 401:
+            raise EnvironmentError("Invalid Groq API key.")
+        elif response.status_code == 413:
+            raise RuntimeError("Input too large for Groq. Try fewer or shorter articles.")
+        elif response.status_code != 200:
+            raise RuntimeError(f"Groq API error {response.status_code}: {response.text[:200]}")
 
-    print(f"{Fore.YELLOW}[LLM] Response received ({len(raw_response)} chars). "
-          f"Parsing JSON...{Style.RESET_ALL}")
+        # Success — parse response
+        try:
+            response_json = response.json()
+            raw_response = response_json["choices"][0]["message"]["content"].strip()
+        except (KeyError, IndexError, ValueError) as e:
+            raise ValueError(f"Unexpected response structure from Groq: {e}")
 
-    # Strip markdown code fences if model adds them
-    if raw_response.startswith("```"):
-        lines = raw_response.split("\n")
-        raw_response = "\n".join(lines[1:-1]).strip()
+        if not raw_response or len(raw_response) < 10:
+            raise ValueError("Groq returned an empty response.")
 
-    # Check if response looks like JSON before trying to parse
-    if not raw_response.startswith("{"):
-        print(f"{Fore.RED}[LLM] Response doesn't look like JSON. "
-              f"First 200 chars: {raw_response[:200]}{Style.RESET_ALL}")
-        raise ValueError(
-            "Groq returned plain text instead of JSON. "
-            "This usually means the article text was too long or garbled. "
-            "Try using the 'Paste Text' tab with a shorter article."
-        )
+        print(f"{Fore.YELLOW}[LLM] Response received ({len(raw_response)} chars). "
+              f"Parsing JSON...{Style.RESET_ALL}")
 
-    try:
-        parsed = json.loads(raw_response)
-    except json.JSONDecodeError as e:
-        print(f"{Fore.RED}[LLM] JSON parse failed. "
-              f"First 300 chars of response: {raw_response[:300]}{Style.RESET_ALL}")
-        raise ValueError(
-            f"Failed to parse JSON from Groq: {e}. "
-            f"Try with a shorter or simpler article."
-        )
+        if raw_response.startswith("```"):
+            lines = raw_response.split("\n")
+            raw_response = "\n".join(lines[1:-1]).strip()
 
-    return parsed
+        if not raw_response.startswith("{"):
+            print(f"{Fore.RED}[LLM] Response doesn't look like JSON: "
+                  f"{raw_response[:200]}{Style.RESET_ALL}")
+            raise ValueError(
+                "Groq returned plain text instead of JSON. "
+                "Try with a shorter article or use the 'Paste Text' tab."
+            )
+
+        try:
+            parsed = json.loads(raw_response)
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Failed to parse JSON from Groq: {e}")
+
+        return parsed
+
+    raise RuntimeError("Groq failed after all retry attempts. Please wait a minute and try again.")
