@@ -7,21 +7,14 @@ import os
 import json
 import requests
 from colorama import Fore, Style
-
-# FIXED IMPORT: Removed "core." prefix
-from prompt_engine import SYSTEM_PROMPT, build_analysis_prompt
+from core.prompt_engine import SYSTEM_PROMPT, build_analysis_prompt
 
 
 def analyze_news(news_text: str) -> dict:
-    """
-    Send news text to Groq and get structured JSON analysis back.
-    Returns parsed Python dict.
-    """
     api_key = os.environ.get("GROQ_API_KEY")
     if not api_key or api_key == "your_groq_api_key_here":
         raise EnvironmentError(
-            "GROQ_API_KEY not set in environment or .env file. "
-            "Get your free key at https://console.groq.com"
+            "GROQ_API_KEY not set. Get your free key at https://console.groq.com"
         )
 
     prompt = build_analysis_prompt(news_text)
@@ -56,7 +49,7 @@ def analyze_news(news_text: str) -> dict:
         raise RuntimeError(f"Network error calling Groq: {e}")
 
     if response.status_code == 401:
-        raise EnvironmentError("Invalid Groq API key. Check your deployment settings.")
+        raise EnvironmentError("Invalid Groq API key. Check your environment variables.")
     elif response.status_code == 429:
         raise RuntimeError("Groq rate limit hit. Wait a moment and try again.")
     elif response.status_code != 200:
@@ -72,7 +65,9 @@ def analyze_news(news_text: str) -> dict:
 
     try:
         parsed = json.loads(raw_response)
-        return parsed
-    except json.JSONDecodeError:
-        print(f"{Fore.RED}[ERROR] Raw LLM response was not valid JSON:{Style.RESET_ALL}\n{raw_response}")
-        raise RuntimeError("LLM returned non-JSON structure. Try running analysis again.")
+    except json.JSONDecodeError as e:
+        print(f"{Fore.RED}[LLM] Raw response that failed to parse:{Style.RESET_ALL}")
+        print(raw_response[:500])
+        raise ValueError(f"Failed to parse JSON from Groq: {e}")
+
+    return parsed
