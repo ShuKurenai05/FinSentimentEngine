@@ -43,7 +43,6 @@ def analyze_news(news_text: str) -> dict:
         ],
         "max_tokens": 4096,
         "temperature": 0.2,
-        "response_format": {"type": "json_object"}
     }
 
     # Retry loop
