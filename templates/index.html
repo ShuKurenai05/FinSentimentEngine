@@ -22,17 +22,8 @@
     --font-mono: 'IBM Plex Mono', monospace;
     --font-body: 'IBM Plex Sans', sans-serif;
   }
-
   * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--font-body);
-    min-height: 100vh;
-  }
-
-  /* Grain overlay */
+  body { background: var(--bg); color: var(--text); font-family: var(--font-body); min-height: 100vh; }
   body::before {
     content: '';
     position: fixed;
@@ -42,521 +33,129 @@
     z-index: 0;
     opacity: 0.4;
   }
-
   header {
-    position: relative;
-    z-index: 1;
+    position: relative; z-index: 1;
     border-bottom: 1px solid var(--border);
     padding: 24px 48px;
-    display: flex;
-    align-items: baseline;
-    gap: 16px;
+    display: flex; align-items: baseline; gap: 16px;
   }
-
-  header h1 {
-    font-family: var(--font-display);
-    font-size: 2.4rem;
-    letter-spacing: 2px;
-    color: var(--accent);
-  }
-
-  header span {
-    font-family: var(--font-mono);
-    font-size: 0.7rem;
-    color: var(--muted);
-    letter-spacing: 1px;
-    text-transform: uppercase;
-  }
-
-  .container {
-    position: relative;
-    z-index: 1;
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 48px 24px;
-  }
-
-  /* Tab switcher */
-  .tabs {
-    display: flex;
-    gap: 0;
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    overflow: hidden;
-    width: fit-content;
-    margin-bottom: 28px;
-  }
-
+  header h1 { font-family: var(--font-display); font-size: 2.4rem; letter-spacing: 2px; color: var(--accent); }
+  header span { font-family: var(--font-mono); font-size: 0.7rem; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+  .container { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 48px 24px; }
+  .tabs { display: flex; border: 1px solid var(--border); border-radius: 4px; overflow: hidden; width: fit-content; margin-bottom: 28px; }
   .tab-btn {
-    background: transparent;
-    border: none;
-    color: var(--muted);
-    font-family: var(--font-mono);
-    font-size: 0.75rem;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    padding: 10px 24px;
-    cursor: pointer;
-    transition: all 0.15s;
-    border-right: 1px solid var(--border);
+    background: transparent; border: none; color: var(--muted);
+    font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 1px;
+    text-transform: uppercase; padding: 10px 24px; cursor: pointer;
+    transition: all 0.15s; border-right: 1px solid var(--border);
   }
-
   .tab-btn:last-child { border-right: none; }
-
-  .tab-btn.active {
-    background: var(--accent);
-    color: #0a0a0a;
-    font-weight: 600;
-  }
-
+  .tab-btn.active { background: var(--accent); color: #0a0a0a; font-weight: 600; }
   .tab-btn:hover:not(.active) { background: var(--surface2); color: var(--text); }
-
-  /* Input panels */
   .input-panel { display: none; }
   .input-panel.active { display: block; }
-
-  .url-list {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-bottom: 12px;
-  }
-
-  .url-row {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    animation: slideIn 0.2s ease;
-  }
-
-  @keyframes slideIn {
-    from { opacity: 0; transform: translateY(-6px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-
+  .url-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+  .url-row { display: flex; gap: 8px; align-items: center; animation: slideIn 0.2s ease; }
+  @keyframes slideIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
   input[type="url"], textarea {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    color: var(--text);
-    font-family: var(--font-mono);
-    font-size: 0.8rem;
-    padding: 12px 14px;
-    border-radius: 4px;
-    outline: none;
-    transition: border-color 0.15s;
-    width: 100%;
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--text); font-family: var(--font-mono); font-size: 0.8rem;
+    padding: 12px 14px; border-radius: 4px; outline: none;
+    transition: border-color 0.15s; width: 100%;
   }
-
-  input[type="url"]:focus, textarea:focus {
-    border-color: var(--accent);
-  }
-
-  input[type="url"]::placeholder, textarea::placeholder {
-    color: var(--muted);
-  }
-
-  textarea {
-    min-height: 200px;
-    resize: vertical;
-    line-height: 1.6;
-  }
-
+  input[type="url"]:focus, textarea:focus { border-color: var(--accent); }
+  input[type="url"]::placeholder, textarea::placeholder { color: var(--muted); }
+  textarea { min-height: 200px; resize: vertical; line-height: 1.6; }
   .remove-btn {
-    background: none;
-    border: 1px solid var(--border);
-    color: var(--muted);
-    font-size: 1rem;
-    width: 34px;
-    height: 34px;
-    border-radius: 4px;
-    cursor: pointer;
-    flex-shrink: 0;
-    transition: all 0.15s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    background: none; border: 1px solid var(--border); color: var(--muted);
+    font-size: 1rem; width: 34px; height: 34px; border-radius: 4px;
+    cursor: pointer; flex-shrink: 0; transition: all 0.15s;
+    display: flex; align-items: center; justify-content: center;
   }
-
   .remove-btn:hover { border-color: var(--bear); color: var(--bear); }
-
   .add-url-btn {
-    background: none;
-    border: 1px dashed var(--border);
-    color: var(--muted);
-    font-family: var(--font-mono);
-    font-size: 0.75rem;
-    letter-spacing: 1px;
-    padding: 10px;
-    border-radius: 4px;
-    cursor: pointer;
-    width: 100%;
-    margin-bottom: 16px;
-    transition: all 0.15s;
+    background: none; border: 1px dashed var(--border); color: var(--muted);
+    font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 1px;
+    padding: 10px; border-radius: 4px; cursor: pointer; width: 100%;
+    margin-bottom: 16px; transition: all 0.15s;
   }
-
-  .add-url-btn:hover {
-    border-color: var(--accent);
-    color: var(--accent);
-  }
-
-  .label {
-    font-family: var(--font-mono);
-    font-size: 0.68rem;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 10px;
-    display: block;
-  }
-
-  /* Analyze button */
+  .add-url-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .label { font-family: var(--font-mono); font-size: 0.68rem; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; display: block; }
   .analyze-btn {
-    background: var(--accent);
-    color: #0a0a0a;
-    border: none;
-    font-family: var(--font-display);
-    font-size: 1.2rem;
-    letter-spacing: 2px;
-    padding: 14px 48px;
-    border-radius: 4px;
-    cursor: pointer;
-    margin-top: 20px;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    gap: 10px;
+    background: var(--accent); color: #0a0a0a; border: none;
+    font-family: var(--font-display); font-size: 1.2rem; letter-spacing: 2px;
+    padding: 14px 48px; border-radius: 4px; cursor: pointer; margin-top: 20px;
+    transition: all 0.2s; display: flex; align-items: center; gap: 10px;
   }
-
   .analyze-btn:hover { background: #d9ff45; transform: translateY(-1px); }
   .analyze-btn:active { transform: translateY(0); }
-  .analyze-btn:disabled {
-    background: var(--surface2);
-    color: var(--muted);
-    cursor: not-allowed;
-    transform: none;
-  }
-
-  /* Spinner */
-  .spinner {
-    width: 16px; height: 16px;
-    border: 2px solid #0a0a0a;
-    border-top-color: transparent;
-    border-radius: 50%;
-    animation: spin 0.6s linear infinite;
-    display: none;
-  }
-
+  .analyze-btn:disabled { background: var(--surface2); color: var(--muted); cursor: not-allowed; transform: none; }
+  .spinner { width: 16px; height: 16px; border: 2px solid #0a0a0a; border-top-color: transparent; border-radius: 50%; animation: spin 0.6s linear infinite; display: none; }
   @keyframes spin { to { transform: rotate(360deg); } }
-
-  /* Status bar */
-  .status-bar {
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
-    color: var(--muted);
-    margin-top: 12px;
-    min-height: 18px;
-    letter-spacing: 0.5px;
-  }
-
+  .status-bar { font-family: var(--font-mono); font-size: 0.72rem; color: var(--muted); margin-top: 12px; min-height: 18px; letter-spacing: 0.5px; }
   .status-bar.loading { color: var(--accent); }
-  .status-bar.error   { color: var(--bear); }
-
-  /* Divider */
-  .divider {
-    border: none;
-    border-top: 1px solid var(--border);
-    margin: 48px 0;
-  }
-
-  /* Results */
+  .status-bar.error { color: var(--bear); }
+  .divider { border: none; border-top: 1px solid var(--border); margin: 48px 0; }
   #results { display: none; }
-
-  .results-header {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    margin-bottom: 32px;
-  }
-
-  .results-header h2 {
-    font-family: var(--font-display);
-    font-size: 1.8rem;
-    letter-spacing: 2px;
-    color: var(--text);
-  }
-
-  .meta-info {
-    font-family: var(--font-mono);
-    font-size: 0.68rem;
-    color: var(--muted);
-    text-align: right;
-    line-height: 1.8;
-  }
-
-  /* Portfolio summary bar */
+  .results-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 32px; }
+  .results-header h2 { font-family: var(--font-display); font-size: 1.8rem; letter-spacing: 2px; color: var(--text); }
+  .meta-info { font-family: var(--font-mono); font-size: 0.68rem; color: var(--muted); text-align: right; line-height: 1.8; }
   .portfolio-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-left: 4px solid var(--accent);
-    border-radius: 4px;
-    padding: 24px 28px;
-    margin-bottom: 32px;
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    gap: 32px;
-    align-items: center;
+    background: var(--surface); border: 1px solid var(--border);
+    border-left: 4px solid var(--accent); border-radius: 4px;
+    padding: 24px 28px; margin-bottom: 32px;
+    display: grid; grid-template-columns: auto 1fr auto; gap: 32px; align-items: center;
   }
-
-  .portfolio-sentiment {
-    font-family: var(--font-display);
-    font-size: 2.8rem;
-    letter-spacing: 3px;
-  }
-
+  .portfolio-sentiment { font-family: var(--font-display); font-size: 2.8rem; letter-spacing: 3px; }
   .portfolio-sentiment.Bullish { color: var(--bull); }
   .portfolio-sentiment.Bearish { color: var(--bear); }
   .portfolio-sentiment.Neutral { color: var(--neutral); }
-
-  .sentiment-counts {
-    display: flex;
-    gap: 24px;
-  }
-
-  .count-item {
-    text-align: center;
-  }
-
-  .count-num {
-    font-family: var(--font-display);
-    font-size: 2rem;
-    display: block;
-  }
-
+  .sentiment-counts { display: flex; gap: 24px; }
+  .count-item { text-align: center; }
+  .count-num { font-family: var(--font-display); font-size: 2rem; display: block; }
   .count-num.bull { color: var(--bull); }
   .count-num.bear { color: var(--bear); }
   .count-num.neut { color: var(--neutral); }
-
-  .count-label {
-    font-family: var(--font-mono);
-    font-size: 0.62rem;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-  }
-
-  .avg-score-block {
-    text-align: right;
-  }
-
-  .avg-score {
-    font-family: var(--font-display);
-    font-size: 2.4rem;
-  }
-
-  .outlook-text {
-    grid-column: 1 / -1;
-    font-size: 0.85rem;
-    color: #aaa;
-    line-height: 1.7;
-    border-top: 1px solid var(--border);
-    padding-top: 16px;
-    margin-top: 4px;
-  }
-
-  /* Article cards */
-  .articles-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-    gap: 16px;
-  }
-
+  .count-label { font-family: var(--font-mono); font-size: 0.62rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+  .avg-score-block { text-align: right; }
+  .avg-score { font-family: var(--font-display); font-size: 2.4rem; }
+  .outlook-text { grid-column: 1 / -1; font-size: 0.85rem; color: #aaa; line-height: 1.7; border-top: 1px solid var(--border); padding-top: 16px; margin-top: 4px; }
+  .articles-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }
   .article-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 20px;
-    position: relative;
-    overflow: hidden;
-    animation: fadeUp 0.3s ease both;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 4px; padding: 20px; position: relative;
+    overflow: hidden; animation: fadeUp 0.3s ease both;
   }
-
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(12px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-
-  .article-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 3px;
-  }
-
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  .article-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
   .article-card.Bullish::before { background: var(--bull); }
   .article-card.Bearish::before { background: var(--bear); }
   .article-card.Neutral::before { background: var(--neutral); }
-
-  .card-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 12px;
-    gap: 12px;
-  }
-
-  .card-id {
-    font-family: var(--font-mono);
-    font-size: 0.62rem;
-    color: var(--muted);
-    margin-bottom: 4px;
-    letter-spacing: 1px;
-  }
-
-  .card-headline {
-    font-size: 0.88rem;
-    font-weight: 500;
-    line-height: 1.5;
-    flex: 1;
-  }
-
-  .sentiment-badge {
-    font-family: var(--font-mono);
-    font-size: 0.65rem;
-    font-weight: 600;
-    letter-spacing: 1px;
-    padding: 4px 10px;
-    border-radius: 2px;
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-
+  .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 12px; }
+  .card-id { font-family: var(--font-mono); font-size: 0.62rem; color: var(--muted); margin-bottom: 4px; letter-spacing: 1px; }
+  .card-headline { font-size: 0.88rem; font-weight: 500; line-height: 1.5; flex: 1; }
+  .sentiment-badge { font-family: var(--font-mono); font-size: 0.65rem; font-weight: 600; letter-spacing: 1px; padding: 4px 10px; border-radius: 2px; white-space: nowrap; flex-shrink: 0; }
   .sentiment-badge.Bullish { background: rgba(57,217,138,0.12); color: var(--bull); border: 1px solid rgba(57,217,138,0.25); }
   .sentiment-badge.Bearish { background: rgba(255,77,109,0.12); color: var(--bear); border: 1px solid rgba(255,77,109,0.25); }
   .sentiment-badge.Neutral { background: rgba(240,192,64,0.12); color: var(--neutral); border: 1px solid rgba(240,192,64,0.25); }
-
-  .score-bar-wrap {
-    margin: 12px 0;
-  }
-
-  .score-bar-track {
-    background: var(--surface2);
-    border-radius: 2px;
-    height: 4px;
-    position: relative;
-    overflow: visible;
-  }
-
-  .score-bar-fill {
-    height: 100%;
-    border-radius: 2px;
-    transition: width 0.6s ease, left 0.6s ease;
-    position: absolute;
-    top: 0;
-  }
-
-  /* Fixed Score-Bar Anchor Positions */
-  .score-bar-fill.Bullish { background: var(--bull); left: 50%; }
-  .score-bar-fill.Bearish { background: var(--bear); left: calc(50% - var(--bar-width-offset, 0px)); }
+  .score-bar-wrap { margin: 12px 0; }
+  .score-bar-track { background: var(--surface2); border-radius: 2px; height: 4px; position: relative; overflow: visible; }
+  .score-bar-fill { height: 100%; border-radius: 2px; transition: width 0.6s ease; position: absolute; top: 0; }
+  .score-bar-fill.Bullish { background: var(--bull); right: 50%; }
+  .score-bar-fill.Bearish { background: var(--bear); left: 50%; }
   .score-bar-fill.Neutral { background: var(--neutral); left: 50%; }
-
-  .score-center-line {
-    position: absolute;
-    left: 50%;
-    top: -2px;
-    width: 1px;
-    height: 8px;
-    background: var(--border);
-    z-index: 2;
-  }
-
-  .score-label {
-    font-family: var(--font-mono);
-    font-size: 0.65rem;
-    color: var(--muted);
-    display: flex;
-    justify-content: space-between;
-    margin-top: 4px;
-  }
-
-  .card-row {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-    margin: 8px 0;
-    align-items: center;
-  }
-
-  .row-label {
-    font-family: var(--font-mono);
-    font-size: 0.6rem;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    white-space: nowrap;
-  }
-
-  .tag {
-    font-family: var(--font-mono);
-    font-size: 0.62rem;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    color: #bbb;
-    padding: 2px 8px;
-    border-radius: 2px;
-  }
-
-  .driver-text {
-    font-size: 0.75rem;
-    color: #999;
-    line-height: 1.6;
-  }
-
-  .risk-tag {
-    font-family: var(--font-mono);
-    font-size: 0.62rem;
-    background: rgba(255,77,109,0.1);
-    border: 1px solid rgba(255,77,109,0.25);
-    color: var(--bear);
-    padding: 2px 8px;
-    border-radius: 2px;
-  }
-
-  .error-card {
-    background: rgba(255,77,109,0.07);
-    border: 1px solid rgba(255,77,109,0.2);
-    border-radius: 4px;
-    padding: 16px 20px;
-    font-family: var(--font-mono);
-    font-size: 0.78rem;
-    color: var(--bear);
-    margin-bottom: 20px;
-  }
-
-  /* Warnings */
-  .warn-card {
-    background: rgba(240,192,64,0.07);
-    border: 1px solid rgba(240,192,64,0.2);
-    border-radius: 4px;
-    padding: 14px 18px;
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
-    color: var(--neutral);
-    margin-bottom: 20px;
-    line-height: 1.6;
-  }
-
-  .section-label {
-    font-family: var(--font-mono);
-    font-size: 0.65rem;
-    color: var(--muted);
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    margin-bottom: 16px;
-    display: block;
-  }
-
+  .score-center-line { position: absolute; left: 50%; top: -2px; width: 1px; height: 8px; background: var(--border); }
+  .score-label { font-family: var(--font-mono); font-size: 0.65rem; color: var(--muted); display: flex; justify-content: space-between; margin-top: 4px; }
+  .card-row { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0; align-items: center; }
+  .row-label { font-family: var(--font-mono); font-size: 0.6rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; white-space: nowrap; }
+  .tag { font-family: var(--font-mono); font-size: 0.62rem; background: var(--surface2); border: 1px solid var(--border); color: #bbb; padding: 2px 8px; border-radius: 2px; }
+  .driver-text { font-size: 0.75rem; color: #999; line-height: 1.6; }
+  .risk-tag { font-family: var(--font-mono); font-size: 0.62rem; background: rgba(255,77,109,0.1); border: 1px solid rgba(255,77,109,0.25); color: var(--bear); padding: 2px 8px; border-radius: 2px; }
+  .error-card { background: rgba(255,77,109,0.07); border: 1px solid rgba(255,77,109,0.2); border-radius: 4px; padding: 16px 20px; font-family: var(--font-mono); font-size: 0.78rem; color: var(--bear); margin-bottom: 20px; }
+  .warn-card { background: rgba(240,192,64,0.07); border: 1px solid rgba(240,192,64,0.2); border-radius: 4px; padding: 14px 18px; font-family: var(--font-mono); font-size: 0.72rem; color: var(--neutral); margin-bottom: 20px; line-height: 1.6; }
+  .section-label { font-family: var(--font-mono); font-size: 0.65rem; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 16px; display: block; }
   @media (max-width: 600px) {
-    header { padding: 20px 20px; }
+    header { padding: 20px; }
     .container { padding: 28px 16px; }
     .portfolio-card { grid-template-columns: 1fr; gap: 16px; }
     .results-header { flex-direction: column; gap: 8px; }
@@ -565,63 +164,49 @@
 </style>
 </head>
 <body>
-
 <header>
   <h1>FinSentiment Engine</h1>
   <span>AI-Powered Market Intelligence</span>
 </header>
-
 <div class="container">
-
   <div class="tabs">
     <button class="tab-btn active" onclick="switchTab('urls')">Paste URLs</button>
     <button class="tab-btn" onclick="switchTab('text')">Paste Article Text</button>
   </div>
-
   <div class="input-panel active" id="panel-urls">
     <span class="label">News Article URLs — paste one per row</span>
     <div class="url-list" id="url-list">
       <div class="url-row">
-        <input type="url" placeholder="https://www.reuters.com/markets/article-name..." />
-        <button type="button" class="remove-btn" onclick="removeUrl(this)" title="Remove">×</button>
+        <input type="url" placeholder="https://finance.yahoo.com/news/article..." />
+        <button class="remove-btn" onclick="removeUrl(this)" title="Remove">×</button>
       </div>
     </div>
-    <button type="button" class="add-url-btn" onclick="addUrlRow()">+ Add another URL</button>
+    <button class="add-url-btn" onclick="addUrlRow()">+ Add another URL</button>
   </div>
-
   <div class="input-panel" id="panel-text">
     <span class="label">Paste article text — separate multiple articles with a blank line</span>
     <textarea placeholder="Tesla shares surged 8% today after the company reported record deliveries...&#10;&#10;The Federal Reserve held interest rates steady at 5.25%..."></textarea>
   </div>
-
-  <button type="button" class="analyze-btn" id="analyze-btn" onclick="runAnalysis()">
+  <button class="analyze-btn" id="analyze-btn" onclick="runAnalysis()">
     <span class="spinner" id="spinner"></span>
     <span id="btn-label">ANALYZE</span>
   </button>
   <div class="status-bar" id="status"></div>
-
   <hr class="divider">
-
   <div id="results">
     <div id="error-display"></div>
     <div id="warn-display"></div>
-
     <div class="results-header">
       <h2>ANALYSIS RESULTS</h2>
       <div class="meta-info" id="meta-info"></div>
     </div>
-
     <div class="portfolio-card" id="portfolio-card"></div>
-
     <span class="section-label">Article Breakdown</span>
     <div class="articles-grid" id="articles-grid"></div>
   </div>
-
 </div>
-
 <script>
   let activeTab = 'urls';
-
   function switchTab(tab) {
     activeTab = tab;
     document.querySelectorAll('.tab-btn').forEach((b, i) => {
@@ -630,48 +215,34 @@
     document.getElementById('panel-urls').classList.toggle('active', tab === 'urls');
     document.getElementById('panel-text').classList.toggle('active', tab === 'text');
   }
-
   function addUrlRow() {
     const list = document.getElementById('url-list');
     const row = document.createElement('div');
     row.className = 'url-row';
-    row.innerHTML = `
-      <input type="url" placeholder="https://..." />
-      <button type="button" class="remove-btn" onclick="removeUrl(this)" title="Remove">×</button>
-    `;
+    row.innerHTML = `<input type="url" placeholder="https://..." /><button class="remove-btn" onclick="removeUrl(this)" title="Remove">×</button>`;
     list.appendChild(row);
     row.querySelector('input').focus();
   }
-
   function removeUrl(btn) {
     const list = document.getElementById('url-list');
-    if (list.children.length > 1) {
-      btn.parentElement.remove();
-    }
+    if (list.children.length > 1) btn.parentElement.remove();
   }
-
   function setLoading(on) {
     const btn = document.getElementById('analyze-btn');
-    const spinner = document.getElementById('spinner');
-    const label = document.getElementById('btn-label');
+    document.getElementById('spinner').style.display = on ? 'block' : 'none';
+    document.getElementById('btn-label').textContent = on ? 'ANALYZING...' : 'ANALYZE';
     btn.disabled = on;
-    spinner.style.display = on ? 'block' : 'none';
-    label.textContent = on ? 'ANALYZING...' : 'ANALYZE';
   }
-
   function setStatus(msg, type='') {
     const el = document.getElementById('status');
     el.textContent = msg;
     el.className = 'status-bar ' + type;
   }
-
   async function runAnalysis() {
     document.getElementById('results').style.display = 'none';
     document.getElementById('error-display').innerHTML = '';
     document.getElementById('warn-display').innerHTML = '';
-
     let payload = {};
-
     if (activeTab === 'urls') {
       const inputs = document.querySelectorAll('#url-list input[type="url"]');
       const urls = Array.from(inputs).map(i => i.value.trim()).filter(Boolean);
@@ -684,109 +255,70 @@
       payload = { type: 'text', content: text };
       setStatus('Sending to AI for analysis...', 'loading');
     }
-
     setLoading(true);
-
     try {
       const res = await fetch('/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
-
       const data = await res.json();
-
       if (!res.ok || data.error) {
-        let errMsg = data.error || 'Unknown error';
-        if (data.details && Array.from(data.details).length > 0) {
-           errMsg += `<br><small style="opacity:0.8">${data.details.join('<br>')}</small>`;
-        }
-        document.getElementById('error-display').innerHTML =
-          `<div class="error-card">⚠ ${errMsg}</div>`;
+        document.getElementById('error-display').innerHTML = `<div class="error-card">⚠ ${data.error || 'Unknown error'}</div>`;
         document.getElementById('results').style.display = 'block';
         setStatus('Analysis failed.', 'error');
         return;
       }
-
       renderResults(data);
       setStatus('Analysis complete. Results saved to outputs/ folder.');
-
     } catch (err) {
       setStatus('Network error: ' + err.message, 'error');
     } finally {
       setLoading(false);
     }
   }
-
   function renderResults(data) {
     const results = document.getElementById('results');
     results.style.display = 'block';
-
-    // Warnings
     if (data.fetch_warnings && data.fetch_warnings.length) {
       document.getElementById('warn-display').innerHTML =
         `<div class="warn-card">⚠ Some URLs could not be fetched:<br>${data.fetch_warnings.join('<br>')}</div>`;
     }
-
-    // Meta
     const meta = data.analysis_metadata || {};
     document.getElementById('meta-info').innerHTML =
       `${meta.total_articles || '?'} articles<br>${meta.model_used || ''}<br>${(meta.processing_timestamp || '').replace('T',' ').replace('Z','')}`;
-
-    // Portfolio summary
     const ps = data.portfolio_summary || {};
     const overall = ps.overall_sentiment || 'Neutral';
-    const avgScore = (ps.average_sentiment_score || 0).toFixed(2);
+    const avgScore = parseFloat(ps.average_sentiment_score || 0).toFixed(2);
     const avgColor = avgScore > 0 ? 'var(--bull)' : avgScore < 0 ? 'var(--bear)' : 'var(--neutral)';
     const sign = avgScore > 0 ? '+' : '';
-
     document.getElementById('portfolio-card').innerHTML = `
       <div>
         <div class="label" style="margin-bottom:6px">Overall Sentiment</div>
         <div class="portfolio-sentiment ${overall}">${overall.toUpperCase()}</div>
       </div>
       <div class="sentiment-counts">
-        <div class="count-item">
-          <span class="count-num bull">${ps.bullish_count || 0}</span>
-          <span class="count-label">Bullish</span>
-        </div>
-        <div class="count-item">
-          <span class="count-num bear">${ps.bearish_count || 0}</span>
-          <span class="count-label">Bearish</span>
-        </div>
-        <div class="count-item">
-          <span class="count-num neut">${ps.neutral_count || 0}</span>
-          <span class="count-label">Neutral</span>
-        </div>
+        <div class="count-item"><span class="count-num bull">${ps.bullish_count||0}</span><span class="count-label">Bullish</span></div>
+        <div class="count-item"><span class="count-num bear">${ps.bearish_count||0}</span><span class="count-label">Bearish</span></div>
+        <div class="count-item"><span class="count-num neut">${ps.neutral_count||0}</span><span class="count-label">Neutral</span></div>
       </div>
       <div class="avg-score-block">
         <div class="label">Avg Score</div>
         <div class="avg-score" style="color:${avgColor}">${sign}${avgScore}</div>
       </div>
-      <div class="outlook-text">${ps.market_outlook || ''}</div>
-    `;
-
-    // Article cards
+      <div class="outlook-text">${ps.market_outlook || ''}</div>`;
     const grid = document.getElementById('articles-grid');
     grid.innerHTML = '';
-    const articles = data.articles || [];
-
-    articles.forEach((a, i) => {
+    (data.articles || []).forEach((a, i) => {
       const s = a.sentiment || 'Neutral';
       const score = a.sentiment_score || 0;
-      const barWidth = Math.abs(score) * 50; // Max span distance is 50% from center axis
-
+      const barWidth = Math.abs(score) * 50;
       const entities = (a.entities || []).map(e => `<span class="tag">${e}</span>`).join('');
       const riskFlags = (a.risk_flags || []).map(r => `<span class="risk-tag">⚑ ${r}</span>`).join('');
       const drivers = (a.key_drivers || []).join(' · ');
-
       const card = document.createElement('div');
       card.className = `article-card ${s}`;
       card.style.animationDelay = `${i * 0.06}s`;
-      
-      // Inline style workaround injecting exact offsets to compute Bearish metrics accurately 
-      const styleAttribute = s === 'Bearish' ? `width:${barWidth}%; --bar-width-offset:${barWidth}%` : `width:${barWidth}%`;
-
       card.innerHTML = `
         <div class="card-top">
           <div style="flex:1">
@@ -798,17 +330,15 @@
         <div class="score-bar-wrap">
           <div class="score-bar-track">
             <div class="score-center-line"></div>
-            <div class="score-bar-fill ${s}" style="${styleAttribute}"></div>
+            <div class="score-bar-fill ${s}" style="width:${barWidth}%"></div>
           </div>
-          <div class="score-label"><span>−1.0 Bearish</span><span>${score >= 0 ? '+' : ''}${score.toFixed(2)}</span><span>Bullish +1.0</span></div>
+          <div class="score-label"><span>−1.0 Bearish</span><span>${score>=0?'+':''}${score.toFixed(2)}</span><span>Bullish +1.0</span></div>
         </div>
         ${entities ? `<div class="card-row"><span class="row-label">Entities</span>${entities}</div>` : ''}
         ${drivers ? `<div class="card-row"><span class="row-label">Drivers</span><span class="driver-text">${drivers}</span></div>` : ''}
-        ${riskFlags ? `<div class="card-row"><span class="row-label">Risks</span>${riskFlags}</div>` : ''}
-      `;
+        ${riskFlags ? `<div class="card-row"><span class="row-label">Risks</span>${riskFlags}</div>` : ''}`;
       grid.appendChild(card);
     });
-
     results.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 </script>
