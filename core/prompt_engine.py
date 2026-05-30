@@ -40,7 +40,7 @@ Return exactly this JSON structure and nothing else:
   "analysis_metadata": {{
     "total_articles": <int>,
     "processing_timestamp": "",
-    "model_used": "llama-3.3-70b-versatile"
+    "model_used": "llama-3.1-8b-instant"
   }},
   "articles": [
     {{
