@@ -40,37 +40,45 @@ USER_AGENTS = [
 def _clean_text(text: str) -> str:
     """
     Clean scraped text before sending to AI.
-    Removes unicode garbage, cookie/ad/subscription text,
-    and other noise common in Indian news sites.
+    Aggressively removes garbage, unicode noise, and irrelevant content.
     """
-    # Remove non-ASCII and non-printable characters (Hindi, Marathi, symbols etc.)
+    # Keep only printable ASCII characters
     text = text.encode("ascii", errors="ignore").decode("ascii")
 
-    # Remove common noise phrases from Indian news sites
+    # Remove sequences of repeated characters (aaaaaaa, >>>>>, etc.)
+    text = re.sub(r'(.)\1{4,}', '', text)
+
+    # Remove lines that are too short to be meaningful
+    # or contain known noise phrases
     noise_phrases = [
-        "subscribe now", "subscription", "sign in", "log in", "register free",
-        "cookie", "accept all", "privacy policy", "terms of use",
+        "subscribe", "sign in", "log in", "register",
+        "cookie", "accept", "privacy policy", "terms",
         "advertisement", "also read", "read more", "click here",
-        "follow us on", "download app", "get app", "breaking news",
-        "live updates", "follow live", "refresh page",
+        "follow us", "download app", "get app", "breaking news",
         "javascript", "enable javascript", "please enable",
+        "live updates", "refresh", "notification",
+        "whatsapp", "telegram", "facebook", "twitter", "instagram",
+        "share this", "bookmark", "save article",
     ]
-    lines = text.split(".")
-    cleaned_lines = []
-    for line in lines:
-        line_lower = line.lower().strip()
-        if len(line_lower) < 20:
+
+    sentences = re.split(r'(?<=[.!?])\s+', text)
+    cleaned = []
+    for sentence in sentences:
+        s = sentence.strip()
+        if len(s) < 25:
             continue
-        if any(noise in line_lower for noise in noise_phrases):
+        s_lower = s.lower()
+        if any(noise in s_lower for noise in noise_phrases):
             continue
-        cleaned_lines.append(line.strip())
+        # Skip sentences that are mostly non-alphabetic
+        alpha_ratio = sum(c.isalpha() for c in s) / max(len(s), 1)
+        if alpha_ratio < 0.5:
+            continue
+        cleaned.append(s)
 
-    text = ". ".join(cleaned_lines)
-
-    # Collapse whitespace
-    text = re.sub(r'\s+', ' ', text).strip()
-
-    return text
+    result = " ".join(cleaned)
+    result = re.sub(r'\s+', ' ', result).strip()
+    return result
 
 def _get_domain(url: str) -> str:
     try:
