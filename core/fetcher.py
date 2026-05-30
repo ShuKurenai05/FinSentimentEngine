@@ -16,7 +16,7 @@ except ImportError:
 
 BLOCKED_DOMAINS = [
     "bloomberg.com", "ft.com", "wsj.com", "barrons.com",
-    "reuters.com", "businessinsider.com"
+    "businessinsider.com"
 ]
 
 JS_HEAVY_DOMAINS = [
