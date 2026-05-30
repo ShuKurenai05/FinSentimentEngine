@@ -1,31 +1,10 @@
 """
 FinSentimentEngine — Web Server
+Run locally: python run_web.py
+Then open:   http://localhost:5000
 """
 
 import os
-import sys
-import importlib
-import types
-
-# =====================================================================
-# FORCE PYTHON TO MAP 'core.X' TO YOUR FLAT ROOT FILES
-# =====================================================================
-root_path = os.path.dirname(os.path.abspath(__file__))
-if root_path not in sys.path:
-    sys.path.insert(0, root_path)
-
-# Map the core submodules explicitly so other files don't crash
-for mod_name in ['fetcher', 'llm_client', 'output_handler', 'prompt_engine']:
-    try:
-        sys.modules[f'core.{mod_name}'] = importlib.import_module(mod_name)
-    except Exception:
-        pass
-
-sys.modules['core'] = types.ModuleType('core')
-# =====================================================================
-
-import json
-from datetime import datetime
 from flask import Flask, render_template, request, jsonify
 from dotenv import load_dotenv
 from colorama import init
@@ -33,10 +12,9 @@ from colorama import init
 init()
 load_dotenv()
 
-# Safe to import now
-from fetcher import fetch_from_url, fetch_from_string
-from llm_client import analyze_news
-from output_handler import save_output
+from core.fetcher import fetch_from_url, fetch_from_string
+from core.llm_client import analyze_news
+from core.output_handler import save_output
 
 app = Flask(__name__)
 
@@ -49,11 +27,8 @@ def index():
 @app.route("/analyze", methods=["POST"])
 def analyze():
     data = request.get_json()
-    if not data:
-        return jsonify({"error": "Invalid or empty payload."}), 400
-
-    input_type = data.get("type")        
-    content = data.get("content", "")    
+    input_type = data.get("type")
+    content = data.get("content", "")
 
     collected_articles = []
     errors = []
@@ -69,7 +44,7 @@ def analyze():
                     text = fetch_from_url(url)
                     collected_articles.append(f"SOURCE: {url}\n\n{text}")
                 except Exception as e:
-                    errors.append(f"Could not fetch {url}: {str(e)}")
+                    errors.append(str(e))
 
             if not collected_articles:
                 return jsonify({"error": "All URLs failed to load.", "details": errors}), 400
@@ -85,6 +60,13 @@ def analyze():
         combined = "\n\n---\n\n".join(collected_articles)
         results = analyze_news(combined)
 
+        # Inject real server timestamp instead of AI-hallucinated one
+        from datetime import datetime, timezone
+        results.setdefault("analysis_metadata", {})
+        results["analysis_metadata"]["processing_timestamp"] = (
+            datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+        )
+
         if errors:
             results["fetch_warnings"] = errors
 
@@ -98,6 +80,7 @@ def analyze():
 
 
 if __name__ == "__main__":
-    print("\n  FinSentimentEngine is running.")
     port = int(os.environ.get("PORT", 5000))
+    print(f"\n  FinSentimentEngine is running.")
+    print(f"  Open your browser: http://localhost:{port}\n")
     app.run(debug=False, host="0.0.0.0", port=port)
