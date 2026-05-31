@@ -282,12 +282,19 @@ def fetch_from_newsapi(query: str, api_key: str, num_articles: int = 5) -> list:
 
     url = "https://newsapi.org/v2/everything"
     params = {
-        "q": query,
-        "language": "en",
-        "sortBy": "publishedAt",
-        "pageSize": num_articles,
-        "apiKey": api_key
-    }
+    "q": f'"{query}" stock OR shares OR market OR earnings OR revenue OR investor',
+    "language": "en",
+    "sortBy": "publishedAt",
+    "pageSize": num_articles,
+    "apiKey": api_key,
+    "domains": (
+        "reuters.com,bloomberg.com,cnbc.com,finance.yahoo.com,"
+        "marketwatch.com,investing.com,businessinsider.com,"
+        "economictimes.indiatimes.com,livemint.com,moneycontrol.com,"
+        "thehindu.com,businesstoday.in,financialexpress.com,"
+        "zeebiz.com,ndtvprofit.com"
+    )
+}
 
     try:
         response = requests.get(url, params=params, timeout=10)
