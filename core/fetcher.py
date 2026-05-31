@@ -280,51 +280,61 @@ def fetch_from_newsapi(query: str, api_key: str, num_articles: int = 5) -> list:
     """
     print(f"{Fore.CYAN}[FETCHER] Searching NewsAPI for: '{query}'{Style.RESET_ALL}")
 
-    url = "https://newsapi.org/v2/everything"
-    params = {
-    "q": f'"{query}" AND (stock OR shares OR earnings OR revenue OR market)',
-    "language": "en",
-    "sortBy": "publishedAt",
-    "pageSize": num_articles,
-    "apiKey": api_key,
-    "domains": (
-        "reuters.com,bloomberg.com,cnbc.com,finance.yahoo.com,"
-        "marketwatch.com,investing.com,businessinsider.com,"
-        "economictimes.indiatimes.com,livemint.com,moneycontrol.com,"
-        "thehindu.com,businesstoday.in,financialexpress.com,"
-        "zeebiz.com,ndtvprofit.com"
-    )
-}
-
-    try:
-        response = requests.get(url, params=params, timeout=10)
-        response.raise_for_status()
-    except requests.Timeout:
-        raise ConnectionError("NewsAPI timed out. Try again.")
-    except requests.HTTPError as e:
-        status = e.response.status_code if e.response else "unknown"
-        if status == 401:
-            raise EnvironmentError("Invalid NewsAPI key. Check your environment variables.")
-        elif status == 426:
-            raise EnvironmentError(
-                "NewsAPI free tier only works on localhost. "
-                "On a live server you need a paid plan. "
-                "Use the Paste Text tab instead."
-            )
-        else:
+    def _search(q_params):
+        """Inner function to make the actual API call."""
+        url = "https://newsapi.org/v2/everything"
+        try:
+            response = requests.get(url, params=q_params, timeout=10)
+            response.raise_for_status()
+        except requests.Timeout:
+            raise ConnectionError("NewsAPI timed out. Try again.")
+        except requests.HTTPError as e:
+            status = e.response.status_code if e.response else "unknown"
+            if status == 401:
+                raise EnvironmentError("Invalid NewsAPI key.")
             raise ConnectionError(f"NewsAPI error {status}.")
-    except requests.RequestException as e:
-        raise ConnectionError(f"Network error calling NewsAPI: {e}")
+        except requests.RequestException as e:
+            raise ConnectionError(f"Network error calling NewsAPI: {e}")
 
-    data = response.json()
+        data = response.json()
+        if data.get("status") != "ok":
+            raise ConnectionError(f"NewsAPI error: {data.get('message', 'Unknown')}")
+        return data.get("articles", [])
 
-    if data.get("status") != "ok":
-        raise ConnectionError(f"NewsAPI returned error: {data.get('message', 'Unknown error')}")
+    # First attempt — strict: term in title/description + financial keywords
+    strict_params = {
+        "q": f'"{query}" AND (stock OR shares OR earnings OR revenue OR market OR investor)',
+        "language": "en",
+        "sortBy": "relevancy",
+        "pageSize": num_articles,
+        "apiKey": api_key,
+        "searchIn": "title,description"
+    }
 
-    articles = data.get("articles", [])
+    articles = _search(strict_params)
+    print(f"{Fore.CYAN}[FETCHER] Strict search returned {len(articles)} articles{Style.RESET_ALL}")
+
+    # If too few results, fallback — relax to just the query term in title
+    if len(articles) < 3:
+        print(f"{Fore.YELLOW}[FETCHER] Too few results, trying relaxed search...{Style.RESET_ALL}")
+        relaxed_params = {
+            "q": query,
+            "language": "en",
+            "sortBy": "relevancy",
+            "pageSize": num_articles,
+            "apiKey": api_key,
+            "searchIn": "title"   # term must be in headline at minimum
+        }
+        articles = _search(relaxed_params)
+        print(f"{Fore.CYAN}[FETCHER] Relaxed search returned {len(articles)} articles{Style.RESET_ALL}")
+
     if not articles:
-        raise ValueError(f"No articles found for '{query}'. Try a different search term.")
+        raise ValueError(
+            f"No articles found for '{query}'. "
+            f"Try a more specific search term like 'Apple Inc stock' or 'Samsung earnings'."
+        )
 
+    # Build text from each article
     results = []
     for a in articles:
         source = a.get("source", {}).get("name", "Unknown")
@@ -332,8 +342,6 @@ def fetch_from_newsapi(query: str, api_key: str, num_articles: int = 5) -> list:
         description = a.get("description") or ""
         content = a.get("content") or ""
 
-        # NewsAPI free tier truncates content at 200 chars
-        # Combine title + description + content for maximum text
         combined = f"SOURCE: {source}\nTITLE: {title}\n\n{description}\n\n{content}"
         combined = _clean_text(combined)
 
@@ -341,7 +349,7 @@ def fetch_from_newsapi(query: str, api_key: str, num_articles: int = 5) -> list:
             results.append(combined)
 
     if not results:
-        raise ValueError(f"Articles found but no readable content extracted for '{query}'.")
+        raise ValueError(f"Articles found but no readable content for '{query}'.")
 
-    print(f"{Fore.CYAN}[FETCHER] NewsAPI returned {len(results)} articles for '{query}'{Style.RESET_ALL}")
+    print(f"{Fore.CYAN}[FETCHER] Final: {len(results)} articles for '{query}'{Style.RESET_ALL}")
     return results
