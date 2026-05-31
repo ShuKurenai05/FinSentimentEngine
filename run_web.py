@@ -71,7 +71,7 @@ def analyze():
                 return jsonify({"error": "NewsAPI key not configured on server."}), 500
 
             try:
-                articles = fetch_from_newsapi(query, api_key, num_articles=5)
+                articles = fetch_from_newsapi(query, api_key, num_articles=7)
                 collected_articles = articles
             except EnvironmentError as e:
                 return jsonify({"error": str(e)}), 500
