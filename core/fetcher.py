@@ -282,7 +282,7 @@ def fetch_from_newsapi(query: str, api_key: str, num_articles: int = 5) -> list:
 
     url = "https://newsapi.org/v2/everything"
     params = {
-    "q": f'"{query}" stock OR shares OR market OR earnings OR revenue OR investor',
+    "q": f'"{query}" AND (stock OR shares OR earnings OR revenue OR market)',
     "language": "en",
     "sortBy": "publishedAt",
     "pageSize": num_articles,
